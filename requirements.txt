@@ -1,0 +1,22 @@
+# Dependencias del ia-service (versiones instaladas y verificadas)
+fastapi==0.143.0
+uvicorn==0.54.0
+pydantic==2.14.1
+pydantic-settings==2.15.0
+python-dotenv==1.2.4
+
+# Base de datos (solo lectura de la tabla alimentos)
+SQLAlchemy==2.1.4
+psycopg2-binary==2.9.13
+
+# LangChain (v1 LTS) + proveedor Gemini
+langchain==1.4.4
+langchain-core==1.6.9
+langgraph==1.2.14
+langchain-google-genai==4.4.1
+
+# Cliente HTTP (usado por los tests con TestClient)
+httpx==0.28.1
+
+# Testing
+pytest==9.1.1
