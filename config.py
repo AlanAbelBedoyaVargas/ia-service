@@ -4,13 +4,22 @@ Las variables se leen del archivo .env (ver .env.example). Nunca se
 codifican credenciales en el código fuente.
 """
 
+from pathlib import Path
 from urllib.parse import quote_plus
 
+from dotenv import load_dotenv
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+# El .env vive junto a este archivo. Además de cargarlo en los Settings de
+# abajo, se carga al entorno del PROCESO: así las librerías que leen
+# variables de entorno directamente (por ejemplo LangSmith con
+# LANGSMITH_TRACING / LANGSMITH_API_KEY) también las ven sin tocar código.
+BASE_DIR = Path(__file__).resolve().parent
+load_dotenv(BASE_DIR / ".env")
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+    model_config = SettingsConfigDict(env_file=BASE_DIR / ".env", env_file_encoding="utf-8", extra="ignore")
 
     # Proveedor de IA (Google Gemini)
     ai_api_key: str = ""
