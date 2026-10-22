@@ -21,9 +21,12 @@ load_dotenv(BASE_DIR / ".env")
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=BASE_DIR / ".env", env_file_encoding="utf-8", extra="ignore")
 
-    # Proveedor de IA (Google Gemini)
+    # Proveedor de IA vía OpenRouter: API compatible con el formato de
+    # OpenAI que expone modelos de Google, OpenAI, Anthropic, etc.
+    # AI_MODEL usa el slug de OpenRouter con prefijo de proveedor.
     ai_api_key: str = ""
-    ai_model: str = "gemini-2.5-flash-lite"
+    ai_base_url: str = "https://openrouter.ai/api/v1"
+    ai_model: str = "google/gemini-3.5-flash-lite"
 
     # Base de datos (SOLO lectura de la tabla alimentos; mismas variables que el backend)
     db_username: str = ""

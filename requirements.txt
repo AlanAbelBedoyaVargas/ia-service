@@ -9,11 +9,12 @@ python-dotenv==1.2.4
 SQLAlchemy==2.1.4
 psycopg2-binary==2.9.13
 
-# LangChain (v1 LTS) + proveedor Gemini
+# LangChain (v1 LTS) + proveedor vía OpenRouter (formato OpenAI)
 langchain==1.4.4
 langchain-core==1.6.9
 langgraph==1.2.14
-langchain-google-genai==4.4.1
+langchain-openai==1.7.2
+langchain-google-genai==4.4.1  # pendiente de remover: ya se usa OpenRouter
 
 # Cliente HTTP (usado por los tests con TestClient)
 httpx==0.28.1

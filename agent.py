@@ -8,7 +8,7 @@ esquema RecomendacionesResponse (Pydantic).
 from functools import lru_cache
 
 from langchain.agents import create_agent
-from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_openai import ChatOpenAI
 
 from config import settings
 from prompts import SYSTEM_PROMPT, SYSTEM_PROMPT_PLAN_ALTERNATIVO
@@ -27,9 +27,10 @@ LIMITE_ITERACIONES = 30
 @lru_cache(maxsize=1)
 def construir_agente():
     """Crea el agente una sola vez (el modelo y las tools son reutilizables)."""
-    modelo = ChatGoogleGenerativeAI(
+    modelo = ChatOpenAI(
         model=settings.ai_model,
         api_key=settings.ai_api_key,
+        base_url=settings.ai_base_url,
         temperature=0.4,
     )
     return create_agent(
@@ -43,9 +44,10 @@ def construir_agente():
 @lru_cache(maxsize=1)
 def construir_agente_plan_alternativo():
     """Crea el agente generador de opciones de día alternativo una sola vez."""
-    modelo = ChatGoogleGenerativeAI(
+    modelo = ChatOpenAI(
         model=settings.ai_model,
         api_key=settings.ai_api_key,
+        base_url=settings.ai_base_url,
         temperature=0.5,
     )
     return create_agent(

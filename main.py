@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 app = FastAPI(
     title="IA de recomendaciones alimentarias",
     description=(
-        "Agente de LangChain (Gemini) que sugiere alimentos del catálogo para "
+        "Agente de LangChain (vía OpenRouter) que sugiere alimentos del catálogo para "
         "acercar al paciente a sus objetivos del día. El contexto lo arma el "
         "backend y el catálogo se consulta con tools sobre la base de datos."
     ),
@@ -56,6 +56,8 @@ def clasificar_error_proveedor(exc: Exception) -> tuple[int, str]:
         return 500, mensaje_original
     if any(clave in texto for clave in ("api key", "401", "403", "permission", "invalid_argument")):
         return 502, "La API rechazó la solicitud: revisa AI_API_KEY y AI_MODEL en el archivo .env del ia-service"
+    if any(clave in texto for clave in ("insufficient", "credit")):
+        return 502, "Saldo insuficiente en OpenRouter: carga créditos para seguir usando el servicio"
     if any(clave in texto for clave in ("429", "resource_exhausted", "quota", "cuota")):
         return 429, "Se excedió la cuota del proveedor de IA. Intenta más tarde."
     if isinstance(exc, TimeoutError) or "timeout" in texto or "deadline" in texto:
