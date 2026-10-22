@@ -20,7 +20,6 @@ def contexto_valido() -> dict:
     return {
         "paciente": {
             "objetivo": "Perder peso",
-            "condicion_medica": None,
             "nivel_actividad": "ligero",
             "sexo": "masculino",
             "edad": 35,
@@ -68,6 +67,52 @@ def contexto_valido() -> dict:
             "grasas_restantes": 66.0,
         },
         "comidas_sin_registrar": ["almuerzo", "cena", "snack"],
+    }
+
+
+@pytest.fixture
+def contexto_plan_alternativo_valido() -> dict:
+    """Contexto válido para generar alternativas de un día del plan."""
+    return {
+        "paciente": {
+            "objetivo": "Perder peso",
+            "nivel_actividad": "ligero",
+            "sexo": "masculino",
+            "edad": 35,
+            "peso_kg": 85.0,
+            "altura_cm": 178.0,
+        },
+        "restricciones_dietarias": {
+            "alergias": [],
+            "intolerancias": ["Lactosa"],
+            "restricciones": [],
+        },
+        "plan_base": {
+            "titulo": "Plan de reducción calórica",
+            "descripcion": "Plan equilibrado",
+            "dia_semana": 2,
+            "nombre_dia": "Martes",
+            "objetivos_del_dia": {
+                "kcal": 1850.0,
+                "proteinas_g": 140.0,
+                "carbohidratos_g": 180.0,
+                "grasas_g": 60.0,
+            },
+            "comidas_originales_del_dia": [
+                {
+                    "tipo_comida": "desayuno",
+                    "kcal": 450.0,
+                    "proteinas_g": 25.0,
+                    "carbohidratos_g": 55.0,
+                    "grasas_g": 12.0,
+                    "alimentos": [{"nombre": "Avena en hojuelas", "cantidad_g": 60}],
+                }
+            ],
+        },
+        "preferencias": {
+            "alimentos_evitar": ["Salmón"],
+            "alimentos_preferidos": ["Atún al agua", "Huevo"],
+        },
     }
 
 

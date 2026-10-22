@@ -48,3 +48,27 @@ def test_recomendaciones_con_clave_invalida_y_contexto_invalido(cliente):
         headers={"X-Internal-Key": "incorrecta"},
     )
     assert respuesta.status_code in (401, 422)
+
+
+def test_plan_alternativo_sin_clave_interna_rechazada(cliente, contexto_plan_alternativo_valido):
+    respuesta = cliente.post("/plan-alternativo", json=contexto_plan_alternativo_valido)
+    assert respuesta.status_code == 401
+
+
+def test_plan_alternativo_con_clave_invalida_rechazada(cliente, contexto_plan_alternativo_valido):
+    respuesta = cliente.post(
+        "/plan-alternativo",
+        json=contexto_plan_alternativo_valido,
+        headers={"X-Internal-Key": "esta-clave-no-es"},
+    )
+    assert respuesta.status_code == 401
+    assert "Clave interna" in respuesta.json()["detail"]
+
+
+def test_plan_alternativo_con_clave_valida_pero_contexto_invalido(cliente):
+    respuesta = cliente.post(
+        "/plan-alternativo",
+        json={"paciente": {}, "plan_base": {"dia_semana": 9}},
+        headers={"X-Internal-Key": CLAVE_TEST},
+    )
+    assert respuesta.status_code == 422

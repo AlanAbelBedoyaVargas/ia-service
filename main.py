@@ -14,9 +14,14 @@ import logging
 from fastapi import FastAPI, Header, HTTPException
 from fastapi.concurrency import run_in_threadpool
 
-from agent import ejecutar_agente
+from agent import ejecutar_agente, ejecutar_agente_plan_alternativo
 from config import settings
-from schemas import ContextoPaciente, RecomendacionesResponse
+from schemas import (
+    ContextoPaciente,
+    ContextoPlanAlternativo,
+    PlanAlternativoResponse,
+    RecomendacionesResponse,
+)
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 logger = logging.getLogger(__name__)
@@ -83,4 +88,26 @@ async def recomendaciones(
     except Exception as exc:
         estado, mensaje = clasificar_error_proveedor(exc)
         logger.error("Error ejecutando el agente (%s): %s", type(exc).__name__, exc)
+        raise HTTPException(status_code=estado, detail=mensaje) from exc
+
+
+@app.post("/plan-alternativo", response_model=PlanAlternativoResponse)
+async def plan_alternativo(
+    contexto: ContextoPlanAlternativo,
+    x_internal_key: str | None = Header(default=None, alias="X-Internal-Key"),
+) -> PlanAlternativoResponse:
+    exigir_key_interna(x_internal_key)
+
+    logger.info(
+        "Solicitud de plan alternativo recibida (día: %s, objetivo: %s)",
+        contexto.plan_base.nombre_dia,
+        contexto.paciente.objetivo or "sin objetivo",
+    )
+    try:
+        return await run_in_threadpool(ejecutar_agente_plan_alternativo, contexto)
+    except HTTPException:
+        raise
+    except Exception as exc:
+        estado, mensaje = clasificar_error_proveedor(exc)
+        logger.error("Error ejecutando el agente de plan alternativo (%s): %s", type(exc).__name__, exc)
         raise HTTPException(status_code=estado, detail=mensaje) from exc

@@ -16,7 +16,6 @@ from pydantic import BaseModel, Field
 
 class PacienteContexto(BaseModel):
     objetivo: str | None = None
-    condicion_medica: str | None = None
     nivel_actividad: str | None = None
     sexo: str | None = None
     edad: int | None = None
@@ -101,4 +100,61 @@ class RecomendacionesResponse(BaseModel):
     sugerencias: list[Sugerencia] = Field(
         default_factory=list,
         description="de 1 a 3 sugerencias de alimentos del catálogo",
+    )
+
+
+# ---------- Plan alternativo por día (contexto + salida estructurada) ----------
+
+class PlanBaseDiaContexto(BaseModel):
+    titulo: str | None = None
+    descripcion: str | None = None
+    dia_semana: int = Field(ge=1, le=7)
+    nombre_dia: str
+    objetivos_del_dia: ObjetivosDia
+    comidas_originales_del_dia: list[ComidaPlan] = []
+
+
+class PreferenciasPlanAlternativo(BaseModel):
+    alimentos_evitar: list[str] = []
+    alimentos_preferidos: list[str] = []
+
+
+class ContextoPlanAlternativo(BaseModel):
+    paciente: PacienteContexto
+    restricciones_dietarias: RestriccionesDietarias
+    plan_base: PlanBaseDiaContexto
+    preferencias: PreferenciasPlanAlternativo = Field(default_factory=PreferenciasPlanAlternativo)
+
+
+class AlimentoPropuesto(BaseModel):
+    id_alimento: int = Field(description="id del alimento del catálogo, obtenido con las herramientas")
+    cantidad_g: float = Field(description="cantidad sugerida en gramos (entre 1 y 999)")
+
+
+class ComidaPropuesta(BaseModel):
+    tipo_comida: TipoComida = Field(description="tipo de comida del día: desayuno, almuerzo, cena o snack")
+    alimentos: list[AlimentoPropuesto] = Field(
+        default_factory=list,
+        description="alimentos del catálogo que componen esta comida (de 2 a 4 ítems)",
+    )
+
+
+class OpcionDiaAlternativo(BaseModel):
+    titulo: str = Field(description="título breve y descriptivo de esta opción de menú (en español)")
+    justificacion: str = Field(
+        description=(
+            "explicación breve (1-2 frases, en español) de cómo esta opción adapta el día "
+            "respetando las metas del nutricionista y las preferencias del paciente"
+        )
+    )
+    comidas: list[ComidaPropuesta] = Field(
+        default_factory=list,
+        description="las 4 comidas del día: desayuno, almuerzo, cena y snack",
+    )
+
+
+class PlanAlternativoResponse(BaseModel):
+    opciones: list[OpcionDiaAlternativo] = Field(
+        default_factory=list,
+        description="exactamente 2 opciones de menú diario diferentes entre sí",
     )
