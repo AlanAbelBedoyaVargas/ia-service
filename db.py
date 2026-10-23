@@ -7,10 +7,15 @@ la base de datos lo rechazaría.
 
 from functools import lru_cache
 
-from sqlalchemy import column, create_engine, select, table
+from sqlalchemy import column, create_engine, func, select, table
 from sqlalchemy.engine import Engine
 
 from config import settings
+
+# translate() de PostgreSQL sustituye carácter por carácter: ambas cadenas
+# deben tener la misma longitud y el mismo orden para normalizar tildes y ñ.
+_CARACTERES_ACENTUADOS = "áéíóúüñÁÉÍÓÚÜÑ"
+_CARACTERES_SIN_ACENTO = "aeiouunAEIOUUN"
 
 # Tabla declarada sin ORM: solo se usa para construir consultas
 # parametrizadas de lectura sobre alimentos.
@@ -72,7 +77,11 @@ def buscar_alimentos_db(
     """Busca alimentos con filtros combinables (todos opcionales)."""
     filtros = []
     if nombre:
-        filtros.append(alimentos_tbl.c.nombre.ilike(f"%{nombre}%"))
+        filtros.append(
+            func.translate(alimentos_tbl.c.nombre, _CARACTERES_ACENTUADOS, _CARACTERES_SIN_ACENTO).ilike(
+                func.translate(f"%{nombre}%", _CARACTERES_ACENTUADOS, _CARACTERES_SIN_ACENTO)
+            )
+        )
     if categoria:
         filtros.append(alimentos_tbl.c.categoria == categoria)
     if calorias_min is not None:
@@ -85,12 +94,12 @@ def buscar_alimentos_db(
         filtros.append(alimentos_tbl.c.carbohidratos_g <= carbohidratos_max)
     if grasas_max is not None:
         filtros.append(alimentos_tbl.c.grasas_g <= grasas_max)
-    if es_vegano is not None:
-        filtros.append(alimentos_tbl.c.es_vegano == es_vegano)
-    if sin_gluten is not None:
-        filtros.append(alimentos_tbl.c.sin_gluten == sin_gluten)
-    if sin_lactosa is not None:
-        filtros.append(alimentos_tbl.c.sin_lactosa == sin_lactosa)
+    if es_vegano:
+        filtros.append(alimentos_tbl.c.es_vegano.is_(True))
+    if sin_gluten:
+        filtros.append(alimentos_tbl.c.sin_gluten.is_(True))
+    if sin_lactosa:
+        filtros.append(alimentos_tbl.c.sin_lactosa.is_(True))
 
     consulta = select(*alimentos_tbl.c)
     if filtros:

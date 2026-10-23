@@ -16,6 +16,16 @@ def test_buscar_por_nombre_parcial():
     assert "Muslo de pollo" in nombres
 
 
+def test_buscar_por_nombre_ignora_acentos():
+    resultados = buscar_alimentos_db(nombre="atun")
+    assert any(a["nombre"] == "Atún al agua" for a in resultados)
+
+
+def test_buscar_por_nombre_con_acentos_sigue_funcionando():
+    resultados = buscar_alimentos_db(nombre="Brócoli")
+    assert any(a["nombre"] == "Brócoli" for a in resultados)
+
+
 def test_filtro_proteinas_min():
     resultados = buscar_alimentos_db(proteinas_min=25)
     assert len(resultados) > 0
@@ -32,6 +42,17 @@ def test_filtro_sin_lactosa_excluye_lacteos():
     resultados = buscar_alimentos_db(sin_lactosa=True)
     assert len(resultados) > 0
     assert all(a["sin_lactosa"] for a in resultados)
+
+
+def test_filtros_booleanos_false_no_filtran():
+    sin_filtro = buscar_alimentos_db(limite=20)
+    con_false = buscar_alimentos_db(
+        es_vegano=False,
+        sin_gluten=False,
+        sin_lactosa=False,
+        limite=20,
+    )
+    assert [a["id"] for a in con_false] == [a["id"] for a in sin_filtro]
 
 
 def test_filtro_es_vegano_excluye_carnes_y_lacteos():

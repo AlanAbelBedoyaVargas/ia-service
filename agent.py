@@ -8,6 +8,7 @@ esquema RecomendacionesResponse (Pydantic).
 from functools import lru_cache
 
 from langchain.agents import create_agent
+from langchain.agents.structured_output import ProviderStrategy
 from langchain_openai import ChatOpenAI
 
 from config import settings
@@ -37,7 +38,7 @@ def construir_agente():
         model=modelo,
         tools=[buscar_alimentos, obtener_alimento],
         system_prompt=SYSTEM_PROMPT,
-        response_format=RecomendacionesResponse,
+        response_format=ProviderStrategy(RecomendacionesResponse),
     )
 
 
@@ -54,7 +55,7 @@ def construir_agente_plan_alternativo():
         model=modelo,
         tools=[buscar_alimentos, obtener_alimento],
         system_prompt=SYSTEM_PROMPT_PLAN_ALTERNATIVO,
-        response_format=PlanAlternativoResponse,
+        response_format=ProviderStrategy(PlanAlternativoResponse),
     )
 
 
