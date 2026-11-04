@@ -99,7 +99,7 @@ class RecomendacionesResponse(BaseModel):
     analisis: str = Field(description="resumen del estado del día del paciente (2-3 frases, en español)")
     sugerencias: list[Sugerencia] = Field(
         default_factory=list,
-        description="de 1 a 3 sugerencias de alimentos del catálogo",
+        description="de 3 a 5 sugerencias de alimentos del catálogo (menos si ya completó el día)",
     )
 
 
