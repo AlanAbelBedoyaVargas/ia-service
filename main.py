@@ -78,8 +78,9 @@ async def recomendaciones(
     exigir_key_interna(x_internal_key)
 
     logger.info(
-        "Solicitud de recomendaciones recibida (paciente: %s)",
-        contexto.paciente.objetivo or "sin objetivo",
+        "Solicitud de recomendaciones recibida (kcal restantes: %s, comidas sin registrar: %s)",
+        contexto.desvio.kcal_restantes,
+        len(contexto.comidas_sin_registrar),
     )
     try:
         # El agente se ejecuta de forma bloqueante: se corre en un threadpool
@@ -101,9 +102,10 @@ async def plan_alternativo(
     exigir_key_interna(x_internal_key)
 
     logger.info(
-        "Solicitud de plan alternativo recibida (día: %s, objetivo: %s)",
-        contexto.plan_base.nombre_dia,
-        contexto.paciente.objetivo or "sin objetivo",
+        "Solicitud de plan alternativo recibida (meta: %s kcal/día, evitar: %s, preferidos: %s)",
+        contexto.plan_base.objetivos_del_dia.kcal,
+        len(contexto.preferencias.alimentos_evitar),
+        len(contexto.preferencias.alimentos_preferidos),
     )
     try:
         return await run_in_threadpool(ejecutar_agente_plan_alternativo, contexto)

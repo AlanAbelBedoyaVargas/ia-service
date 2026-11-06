@@ -1,10 +1,12 @@
-"""Esquemas Pydantic.
+"""Esquemas Pydantic del ia-service.
 
-1. ContextoPaciente: espejo del contexto que arma el backend
-   (services/ia.service.js -> construirContexto) SIN el catálogo:
-   el catálogo ya no viaja en el prompt, el agente lo consulta con tools.
-2. RecomendacionesResponse: salida estructurada exigida al agente
-   (se usa como response_format de create_agent).
+1. Contextos: la ÚNICA información que el backend envía al agente, sin ruido:
+   restricciones dietarias + metas del plan (fijadas por el nutricionista) +
+   consumo/desvío (recomendaciones) o referencia del día original (plan
+   alternativo). El catálogo NO viaja: el agente lo consulta con las tools.
+2. Salidas estructuradas exigidas al agente (response_model / response_format):
+   - RecomendacionesResponse (POST /recomendaciones)
+   - PlanAlternativoResponse (POST /plan-alternativo)
 """
 
 from typing import Literal
@@ -14,60 +16,33 @@ from pydantic import BaseModel, Field
 
 # ---------- Contexto enviado por el backend ----------
 
-class PacienteContexto(BaseModel):
-    objetivo: str | None = None
-    nivel_actividad: str | None = None
-    sexo: str | None = None
-    edad: int | None = None
-    peso_kg: float | None = None
-    altura_cm: float | None = None
-
-
 class RestriccionesDietarias(BaseModel):
     alergias: list[str] = []
     intolerancias: list[str] = []
     restricciones: list[str] = []
 
 
-class AlimentoPlanItem(BaseModel):
-    nombre: str
-    cantidad_g: float | None = None
-
-
-class ComidaPlan(BaseModel):
-    tipo_comida: str
-    kcal: float
-    proteinas_g: float
-    carbohidratos_g: float
-    grasas_g: float
-    alimentos: list[AlimentoPlanItem] = []
-
-
 class ObjetivosDia(BaseModel):
+    """Metas diarias fijadas por el nutricionista en el plan."""
+
     kcal: float
     proteinas_g: float
     carbohidratos_g: float
     grasas_g: float
-
-
-class PlanContexto(BaseModel):
-    titulo: str | None = None
-    descripcion: str | None = None
-    calorias_diarias: int
-    comidas_de_hoy: list[ComidaPlan] = []
-    objetivos_del_dia: ObjetivosDia
 
 
 class ConsumoHoy(BaseModel):
-    fecha: str
+    """Suma de lo ya registrado por el paciente HOY (recomendaciones)."""
+
     kcal: float
     proteinas_g: float
     carbohidratos_g: float
     grasas_g: float
-    por_tipo_comida: dict[str, float] = {}
 
 
 class Desvio(BaseModel):
+    """Objetivo - consumo: los nutrientes que aún faltan del día."""
+
     kcal_restantes: float
     proteinas_restantes: float
     carbohidratos_restantes: float
@@ -75,9 +50,8 @@ class Desvio(BaseModel):
 
 
 class ContextoPaciente(BaseModel):
-    paciente: PacienteContexto
     restricciones_dietarias: RestriccionesDietarias
-    plan: PlanContexto
+    objetivos_del_dia: ObjetivosDia
     consumo_registrado_hoy: ConsumoHoy
     desvio: Desvio
     comidas_sin_registrar: list[str] = []
@@ -105,11 +79,23 @@ class RecomendacionesResponse(BaseModel):
 
 # ---------- Plan alternativo por día (contexto + salida estructurada) ----------
 
+class AlimentoPlanItem(BaseModel):
+    """Ítem de referencia de una comida del día original (solo lectura)."""
+
+    nombre: str
+    cantidad_g: float | None = None
+
+
+class ComidaPlan(BaseModel):
+    tipo_comida: str
+    kcal: float
+    proteinas_g: float
+    carbohidratos_g: float
+    grasas_g: float
+    alimentos: list[AlimentoPlanItem] = []
+
+
 class PlanBaseDiaContexto(BaseModel):
-    titulo: str | None = None
-    descripcion: str | None = None
-    dia_semana: int = Field(ge=1, le=7)
-    nombre_dia: str
     objetivos_del_dia: ObjetivosDia
     comidas_originales_del_dia: list[ComidaPlan] = []
 
@@ -120,7 +106,6 @@ class PreferenciasPlanAlternativo(BaseModel):
 
 
 class ContextoPlanAlternativo(BaseModel):
-    paciente: PacienteContexto
     restricciones_dietarias: RestriccionesDietarias
     plan_base: PlanBaseDiaContexto
     preferencias: PreferenciasPlanAlternativo = Field(default_factory=PreferenciasPlanAlternativo)

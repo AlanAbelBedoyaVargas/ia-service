@@ -29,11 +29,12 @@ def test_recomendaciones_con_clave_invalida_rechazada(cliente, contexto_valido):
 
 
 def test_recomendaciones_con_clave_valida_pero_contexto_invalido(cliente):
-    # La clave es correcta pero el contexto no cumple el esquema -> 422
-    # (validación de FastAPI) sin llegar a ejecutar el agente
+    # La clave es correcta pero el contexto no cumple el esquema (faltan
+    # campos obligatorios) -> 422 (validación de FastAPI) sin llegar a
+    # ejecutar el agente
     respuesta = cliente.post(
         "/recomendaciones",
-        json={"paciente": {}},
+        json={"restricciones_dietarias": {}},
         headers={"X-Internal-Key": CLAVE_TEST},
     )
     assert respuesta.status_code == 422
@@ -44,7 +45,7 @@ def test_recomendaciones_con_clave_invalida_y_contexto_invalido(cliente):
     # más allá de la validación estructural de FastAPI
     respuesta = cliente.post(
         "/recomendaciones",
-        json={"paciente": {}},
+        json={"restricciones_dietarias": {}},
         headers={"X-Internal-Key": "incorrecta"},
     )
     assert respuesta.status_code in (401, 422)
@@ -66,9 +67,10 @@ def test_plan_alternativo_con_clave_invalida_rechazada(cliente, contexto_plan_al
 
 
 def test_plan_alternativo_con_clave_valida_pero_contexto_invalido(cliente):
+    # plan_base sin objetivos_del_dia (obligatorio) -> 422
     respuesta = cliente.post(
         "/plan-alternativo",
-        json={"paciente": {}, "plan_base": {"dia_semana": 9}},
+        json={"restricciones_dietarias": {"alergias": []}, "plan_base": {}},
         headers={"X-Internal-Key": CLAVE_TEST},
     )
     assert respuesta.status_code == 422
